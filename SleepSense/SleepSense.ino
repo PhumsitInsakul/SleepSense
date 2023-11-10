@@ -9,169 +9,57 @@
 
 int16_t sBuffer[bufferLen];
 int counter = 0; // Counter to keep track of mean > 100 occurrences
+int lux_Qua = 0;
 
 class BH1750FVI {
 public:
-    typedef enum eDeviceAddress {
+    enum eDeviceAddress {
         k_DevAddress_L = 0x23,
         k_DevAddress_H = 0x5C
-    } eDeviceAddress_t;
+    };
 
-    typedef enum eDeviceMode {
-        k_DevModeContHighRes = 0x10,
-        k_DevModeContHighRes2 = 0x11,
-        k_DevModeContLowRes = 0x13,
-        k_DevModeOneTimeHighRes = 0x20,
-        k_DevModeOneTimeHighRes2 = 0x21,
-        k_DevModeOneTimeLowRes = 0x23
-    } eDeviceMode_t;
+    enum eDeviceMode {
+        k_DevModeContLowRes = 0x13
+    };
 
-    typedef enum eDeviceState {
-        k_DevStatePowerDown = 0x00,
-        k_DevStatePowerUp = 0x01,
-        k_DevStateReset = 0x07
-    } eDeviceState_t;
+    BH1750FVI() : m_DeviceAddress(k_DevAddress_L), m_DeviceMode(k_DevModeContLowRes) {}
 
-    BH1750FVI(eDeviceMode_t DeviceMode);
-    BH1750FVI(uint8_t AddressPin, eDeviceAddress_t DeviceAddress, eDeviceMode_t DeviceMode);
-    void begin(void);
-    uint16_t GetLightIntensity(void);
-    void SetMode(eDeviceMode_t DeviceMode);
-    void Sleep(void);
-    void Reset(void);
+    void begin();
+    uint16_t getLightIntensity();
 
 private:
-    void SetAddress(eDeviceAddress_t DeviceAddress);
-    void I2CWrite(uint8_t Data);
+    void I2CWrite(uint8_t data);
 
-    uint8_t m_AddressPin;
-    eDeviceAddress_t m_DeviceAddress;
-    eDeviceMode_t m_DeviceMode;
-    bool m_AddressPinUsed;
+    eDeviceAddress m_DeviceAddress;
+    eDeviceMode m_DeviceMode;
 };
 
-BH1750FVI::BH1750FVI(eDeviceMode_t DeviceMode) : m_DeviceMode(DeviceMode) {
-    m_AddressPinUsed = false;
-    m_DeviceAddress = k_DevAddress_L;
-}
-
-BH1750FVI::BH1750FVI(uint8_t AddressPin, eDeviceAddress_t DeviceAddress, eDeviceMode_t DeviceMode) : m_AddressPin(AddressPin), m_DeviceAddress(DeviceAddress), m_DeviceMode(DeviceMode) {
-    m_AddressPinUsed = true;
-}
-
-void BH1750FVI::begin(void) {
+void BH1750FVI::begin() {
     Wire.begin();
-    I2CWrite(k_DevStatePowerUp); // Turn it On
-    if (m_AddressPinUsed) {
-        pinMode(m_AddressPin, OUTPUT); // Set the correct pinmode
-        digitalWrite(m_AddressPin, HIGH); // Address to high
-        SetAddress(m_DeviceAddress); // Set the address
-    }
-    SetMode(m_DeviceMode); // Set the mode
-}
-
-void BH1750FVI::Sleep(void) {
-    I2CWrite(k_DevStatePowerDown); // Turn it off
-}
-
-void BH1750FVI::Reset(void) {
-    I2CWrite(k_DevStatePowerUp); // Turn it on before we can reset it
-    I2CWrite(k_DevStateReset); // Reset
-}
-
-void BH1750FVI::SetAddress(eDeviceAddress_t DeviceAddress) {
-    if (m_AddressPinUsed) {
-        m_DeviceAddress = DeviceAddress;
-        switch (m_DeviceAddress) {
-        case k_DevAddress_L:
-            digitalWrite(m_AddressPin, LOW);
-            break;
-        case k_DevAddress_H:
-            digitalWrite(m_AddressPin, HIGH);
-            break;
-        default:
-            digitalWrite(m_AddressPin, HIGH);
-            break;
-        }
-    }
-}
-
-void BH1750FVI::SetMode(eDeviceMode_t DeviceMode) {
-    m_DeviceMode = DeviceMode;
+    I2CWrite(0x01); // Power up
     delay(10);
     I2CWrite(m_DeviceMode);
 }
 
-uint16_t BH1750FVI::GetLightIntensity(void) {
-    uint16_t Value = 0;
+uint16_t BH1750FVI::getLightIntensity() {
+    uint16_t value = 0;
 
-    Wire.requestFrom(m_DeviceAddress, 2);
-    Value = Wire.read();
-    Value <<= 8;
-    Value |= Wire.read();
+    Wire.requestFrom(static_cast<int>(m_DeviceAddress), 2);
+    value = Wire.read();
+    value <<= 8;
+    value |= Wire.read();
 
-    return Value / 1.2;
+    return value / 1.2;
 }
 
-void BH1750FVI::I2CWrite(uint8_t Data) {
-    Wire.beginTransmission(m_DeviceAddress);
-    Wire.write(Data);
+void BH1750FVI::I2CWrite(uint8_t data) {
+    Wire.beginTransmission(static_cast<int>(m_DeviceAddress));
+    Wire.write(data);
     Wire.endTransmission();
 }
 
-BH1750FVI LightSensor(BH1750FVI::k_DevModeContLowRes);
+BH1750FVI lightSensor;
 int ledPin = 26;
-
-void setup() {
-  pinMode(ledPin, OUTPUT);
-  Serial.begin(115200);
-  LightSensor.begin();
-
-  Serial.println("Setup I2S ...");
-  delay(1000);
-  i2s_install();
-  i2s_setpin();
-  i2s_start(I2S_PORT);
-  delay(500);
-    
-}
-
-void loop() {
-  uint16_t lux = LightSensor.GetLightIntensity();
-  size_t bytesIn = 0;
-  esp_err_t result = i2s_read(I2S_PORT, &sBuffer, bufferLen, &bytesIn, portMAX_DELAY);
-
-  if (lux <= 20) { // 0-20 lux is considered good quality sleep
-      digitalWrite(ledPin, LOW); // Turn on the LED
-      Serial.printf("Lux: %d\n", lux);
-  } else { // More than 20 lux is considered bad quality sleep
-      digitalWrite(ledPin, HIGH); // Turn off the LED
-      Serial.printf("Lux: %d - Sleep quality is bad\n", lux);
-  }
-  //delay(250);
-
-  if (result == ESP_OK)
-  {
-    int samples_read = bytesIn / 8;
-    if (samples_read > 0) {
-      float mean = 0; //unsigned long ค่าไม่ติดลบแต่ค่าเป็นล้าน
-      for (int i = 0; i < samples_read; ++i) {
-        mean += (sBuffer[i]);
-      }
-      mean /= samples_read;
-
-      //Serial.printf("dBFS: %d\n", static_cast<int>(mean));
-      Serial.print(static_cast<int>(mean));
-      Serial.print('\n');
-      if (mean > 100) {
-        counter++; //counter = counter + 1; รันได้ผลดี (counter++ ดูสวยดี)
-        Serial.printf("dBFS เกินที่กำหนดจำนวน: %d ครั้ง\n", counter); 
-      }
-    }
-    //delay(100); 
-  }
-  delay(500); //delay มีผลอย่างมากต่อการรับค่าของเสียง (175 โอเค, >250 พัง)
-}
 
 void i2s_install(){
   const i2s_config_t i2s_config = {
@@ -199,4 +87,63 @@ void i2s_setpin(){
 
   i2s_set_pin(I2S_PORT, &pin_config);
 }
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  Serial.begin(115200);
+  lightSensor.begin();
+
+  Serial.println("Setup I2S ...");
+  delay(1000);
+  i2s_install();
+  i2s_setpin();
+  i2s_start(I2S_PORT);
+  delay(500);
+    
+}
+
+void loop() {
+  uint16_t lux = lightSensor.getLightIntensity();
+  //float mean = 0; //unsigned long ค่าไม่ติดลบแต่ค่าเป็นล้าน
+  size_t bytesIn = 0;
+  esp_err_t result = i2s_read(I2S_PORT, &sBuffer, bufferLen, &bytesIn, portMAX_DELAY);
+
+  if (lux <= 18) { // 0-20 lux is considered good quality sleep
+      digitalWrite(ledPin, LOW); // Turn on the LED
+      Serial.printf("Lux: %d\n", lux);
+  } else { // More than 20 lux is considered bad quality sleep
+      digitalWrite(ledPin, HIGH); // Turn off the LED
+      Serial.printf("Lux: %d - Sleep quality is bad\n", lux);
+      lux_Qua++;
+  }
+  //delay(250);
+
+  if (result == ESP_OK)
+  {
+    int samples_read = bytesIn / 8;
+    float mean = 0; //unsigned long ค่าไม่ติดลบแต่ค่าเป็นล้าน
+    if (samples_read > 0) {
+      for (int i = 0; i < samples_read; ++i) {
+        mean += (sBuffer[i]);
+      }
+      mean /= samples_read;
+      //Serial.printf("dBFS: %d\n", static_cast<int>(mean));
+      Serial.print(static_cast<int>(mean));
+      Serial.print('\n');
+      if (mean > 155) {
+        counter++; //counter = counter + 1; รันได้ผลดี (counter++ ดูสวยดี)
+        Serial.printf("dBFS เกินที่กำหนดจำนวน: %d ครั้ง\n", counter); 
+      }
+    }
+    //delay(100); 
+  }
+  
+  if(lux_Qua >= 2 || counter >= 2){
+    Serial.printf("คุณภาพการนอนของคุณย่ำแย่ ;( \n"); 
+  }else{
+    Serial.printf("คุณภาพการนอนของคุณดีมากกกก!!!\n"); 
+  }
+  delay(500); //delay มีผลอย่างมากต่อการรับค่าของเสียง (175 โอเค, >250 พัง)
+}
+
 

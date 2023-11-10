@@ -12,7 +12,7 @@
     - ![สกรีนช็อต 2023-11-10 074534](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/4f9650d4-ce29-4e75-9ab3-1f3849133c65)
   - PCB:
     - ![สกรีนช็อต 2023-11-10 074701](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/5c3695c2-100a-42cc-b50e-f31456f7cad5)
-  - อุปกรณ์
+  - อุปกรณ์:
     - ![สกรีนช็อต 2023-11-10 074840](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/36e5052a-2643-48c6-921a-912c502f803b)
     - ![S__20078596](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/4c62be14-9547-4f50-9765-bc80eb0bb852)
 
@@ -28,7 +28,7 @@
 -  มีการเปิดการใช้งาน Watchdog timer เพื่อป้องการการค้าง
 
 ### 3. Frontend
-- Work flow
+- Work flow:
   -  ![สกรีนช็อต 2023-11-10 075635](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/d4eee81b-6aa2-43c4-be00-16753ebbad52)
 - Frontend using Arduino IoT Cloud:
   - ![image](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/6efddce5-3bd2-41c2-a171-5929cc54aebc)

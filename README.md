@@ -14,15 +14,18 @@
     - ![สกรีนช็อต 2023-11-10 074701](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/5c3695c2-100a-42cc-b50e-f31456f7cad5)
   - อุปกรณ์
     - ![สกรีนช็อต 2023-11-10 074840](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/36e5052a-2643-48c6-921a-912c502f803b)
+    - ![S__20078596](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/4c62be14-9547-4f50-9765-bc80eb0bb852)
+
 
 
 
 
 ### 2. Firmware
 - Flowchart:
-  - ![Flowcharts (2)](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/93829352-bc57-4546-80e4-8795f3b1fa9f)
--  การควบคุมการทำงานแบบคาบเวลา:
--  การเปิดการใช้งาน Watchdog timer เพื่อป้องการการค้าง:
+  - ![Flowcharts (3)](https://github.com/PhumsitInsakul/SleepSense/assets/96218618/67796555-bfcf-4440-83f6-f3269d9c6d6c)
+
+-  มีการควบคุมการทำงานแบบคาบเวลาด้วย millis()
+-  มีการเปิดการใช้งาน Watchdog timer เพื่อป้องการการค้าง
 
 ### 3. Frontend
 - Work flow
@@ -35,6 +38,7 @@
 
 
 ### 4. Testing
+https://github.com/PhumsitInsakul/SleepSense
 
 
 
